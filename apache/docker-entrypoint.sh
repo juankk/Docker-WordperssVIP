@@ -53,7 +53,7 @@ else
 	svn checkout --non-interactive --trust-server-cert http://develop.svn.wordpress.org/trunk/ ./
 
 	#setting up configuration files
-	cp /files/* "${DIR}/www/"
+	cp -r /files/* "${DIR}/www/"
 	rm -r files
 
 
