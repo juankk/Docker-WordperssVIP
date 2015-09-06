@@ -1,8 +1,5 @@
-CREATE DATABASE 'wordpress';
-CREATE USER 'wordpress' IDENTIFIED BY 'wordpress';
-GRANT ALL on wordpress.* to 'wordpress';
+CREATE DATABASE IF NOT EXISTS wordpress;
+grant all on wordpress.* to 'wordpress'@'%' identified by 'wordpress';
 
-
-CREATE DATABASE 'wptests';
-CREATE USER 'wptests' IDENTIFIED BY 'wptests';
-GRANT ALL on wptests.* to 'wptests';
+CREATE DATABASE IF NOT EXISTS wptests;
+grant all on wptest.* to 'wptests'@'%' identified by 'wptests';

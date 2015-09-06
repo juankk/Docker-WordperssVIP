@@ -6,13 +6,13 @@ if [ "$(ls -A $DIR)" ];
 then
 	#seems that we have alredy installed wp core, just update it
 	cd "${DIR}/www/wp"
-	#svn up
-	#cd "${DIR}/www/wp-content/themes/vip/plugins"
-	#svn up
-	#cd "${DIR}/www/wp-content/themes/twentyfifteen"
-	#svn up
-	#cd "${DIR}/www/wp-tests"
-	#svn up
+	svn up
+	cd "${DIR}/www/wp-content/themes/vip/plugins"
+	svn up
+	cd "${DIR}/www/wp-content/themes/twentyfifteen"
+	svn up
+	cd "${DIR}/www/wp-tests"
+	svn up
 else
 
 	#setting database user names and tables
@@ -23,6 +23,14 @@ else
 	mkdir "${DIR}/www/wp"
 	cd "${DIR}/www/wp"
 	svn checkout --non-interactive --trust-server-cert http://core.svn.wordpress.org/trunk/ ./
+
+	#making sure some necessary folders exist
+	mkdir "${DIR}/www/wp-content"
+	mkdir "${DIR}/www/wp-content/themes"
+	mkdir "${DIR}/www/wp-content/themes/vip"
+	mkdir "${DIR}/www/wp-content/plugins"
+	mkdir "${DIR}/www/wp-content/upgrade"
+	mkdir "${DIR}/www/wp-content/uploads"
 
 	mkdir "${DIR}/www/wp-content/themes/vip/plugins"
 	cd "${DIR}/www/wp-content/themes/vip/plugins"
@@ -36,10 +44,56 @@ else
 	cd "${DIR}/www/wp-tests"
 	svn checkout --non-interactive --trust-server-cert http://develop.svn.wordpress.org/trunk/ ./
 
+
+	#configure wordpress plugins
+	plugins=(
+	  'log-deprecated-notices'
+	  'monster-widget'
+	  'query-monitor'
+	  'user-switching'
+	  'wordpress-importer'
+	  'keyring'
+	  'mrss'
+	  'polldaddy'
+	  'rewrite-rules-inspector'
+	)
+	declare -A github_plugins=(
+		[vip-scanner]='https://github.com/Automattic/vip-scanner'
+		[jetpack]='https://github.com/Automattic/jetpack'
+		[media-explorer]='https://github.com/Automattic/media-explorer'
+		[writing-helper]='https://github.com/automattic/writing-helper'
+	)
+
 	#TODO Configure apache to run the code from the correct location
 
 	#installing site
 	cd "${DIR}/www/wp"
-	/usr/bin/wp core multisite-install --url='vip.local' --title='Wordpress site' --admin_email='admin@example.com' --admin_name='wordpress' --admin_password='wordpress'
+	wp core multisite-install --url='vip.local' --title='Wordpress site' --admin_email='admin@example.com' --admin_name='wordpress' --admin_password='wordpress'
+
+	#installing plugins
+	cd "${DIR}/www/wp-content/plugins"
+	for i in "${plugins[@]}"
+	do
+   		wp plugin install ${i}
+		wp plugin activate ${i} --network
+	done
+
+	#installing plugins
+	for K in "${!github_plugins[@]}";
+	do
+	    echo $K --- ${github_plugins[$K]};
+		mkdir $K
+		cd $K
+		git checkout ${github_plugins[$K]} ./
+		cd ..
+		wp plugin activate ${K} --network
+	done
+
+	cd "${DIR}/www/wp"
+	wp plugin update --all
+
+	# Symlink db.php for Query Monitor
+	ln -s ${DIR}/www/wp-content/db.php  ${DIR}/www/wp-content/plugins/query-monitor/wp-content/db.php
+
 fi
 exec "$@"

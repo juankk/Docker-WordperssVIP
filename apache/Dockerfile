@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y libpng12-dev \
 	libcurl3 \
 	zlib1g \
 	clamav \
+	mysql-client \
 	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
 	&& docker-php-ext-install gd
 
