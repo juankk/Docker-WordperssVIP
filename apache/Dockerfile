@@ -22,17 +22,11 @@ RUN docker-php-ext-enable memcache
 VOLUME /srv
 
 COPY init-tables.sql /init-tables.sql
+COPY files /files
 
 COPY docker-entrypoint.sh /entrypoint.sh
 
 # grr, ENTRYPOINT resets CMD now
 ENTRYPOINT ["/entrypoint.sh"]
-
-#installing wp cli
-WORKDIR /tmp
-CMD ["curl", "-O", "https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar"]
-CMD ["php", "wp-cli.phar", "--info"]
-CMD ["chmod", "+x", "wp-cli.phar"]
-CMD ["mv", "wp-cli.phar", "/usr/local/bin/wp"]
 
 CMD ["apache2-foreground"]

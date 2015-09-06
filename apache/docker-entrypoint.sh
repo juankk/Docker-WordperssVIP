@@ -2,6 +2,14 @@
 set -e
 
 DIR="/srv"
+
+#configuring wp cli
+cd /tmp
+curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+chmod +x wp-cli.phar
+mv wp-cli.phar /usr/local/bin/wp
+wp --info --allow-root
+
 if [ "$(ls -A $DIR)" ];
 then
 	#seems that we have alredy installed wp core, just update it
@@ -44,6 +52,10 @@ else
 	cd "${DIR}/www/wp-tests"
 	svn checkout --non-interactive --trust-server-cert http://develop.svn.wordpress.org/trunk/ ./
 
+	#setting up configuration files
+	cp /files/* "${DIR}/www/"
+	rm -r files
+
 
 	#configure wordpress plugins
 	plugins=(
@@ -68,14 +80,14 @@ else
 
 	#installing site
 	cd "${DIR}/www/wp"
-	wp core multisite-install --url='vip.local' --title='Wordpress site' --admin_email='admin@example.com' --admin_name='wordpress' --admin_password='wordpress'
+	wp core multisite-install --url='vip.local' --title='Wordpress site' --admin_email='admin@example.com' --admin_name='wordpress' --admin_password='wordpress' --allow-root
 
 	#installing plugins
 	cd "${DIR}/www/wp-content/plugins"
 	for i in "${plugins[@]}"
 	do
-   		wp plugin install ${i}
-		wp plugin activate ${i} --network
+   		wp plugin install ${i} --allow-root
+		wp plugin activate ${i} --network --allow-root
 	done
 
 	#installing plugins
@@ -86,11 +98,11 @@ else
 		cd $K
 		git checkout ${github_plugins[$K]} ./
 		cd ..
-		wp plugin activate ${K} --network
+		wp plugin activate ${K} --network --allow-root
 	done
 
 	cd "${DIR}/www/wp"
-	wp plugin update --all
+	wp plugin update --all --allow-root
 
 	# Symlink db.php for Query Monitor
 	ln -s ${DIR}/www/wp-content/db.php  ${DIR}/www/wp-content/plugins/query-monitor/wp-content/db.php
