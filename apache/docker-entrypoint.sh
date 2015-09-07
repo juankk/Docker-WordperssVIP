@@ -54,7 +54,7 @@ else
 
 	#setting up configuration files
 	cp -r /files/* "${DIR}/www/"
-	rm -r files
+	rm -r /files
 
 
 	#configure wordpress plugins
@@ -70,10 +70,10 @@ else
 	  'rewrite-rules-inspector'
 	)
 	declare -A github_plugins=(
-		[vip-scanner]='https://github.com/Automattic/vip-scanner'
-		[jetpack]='https://github.com/Automattic/jetpack'
-		[media-explorer]='https://github.com/Automattic/media-explorer'
-		[writing-helper]='https://github.com/automattic/writing-helper'
+		[vip-scanner]='https://github.com/Automattic/vip-scanner.git'
+		[jetpack]='https://github.com/Automattic/jetpack.git'
+		[media-explorer]='https://github.com/Automattic/media-explorer.git'
+		[writing-helper]='https://github.com/automattic/writing-helper.git'
 	)
 
 	#TODO Configure apache to run the code from the correct location

@@ -1,5 +1,4 @@
 <?php
-require_once( __DIR__ . '/../vip-quickstart-config/local-proxy-config.php' );
 define('AUTH_KEY',         'G-/O&gZ~k[1<*{md_dZR>$%+r|!.-hsajLtDAz{8:|[nQ=UhVdi-P}&%zI?V89Kf');
 define('SECURE_AUTH_KEY',  '={k>rh$nP|BD2}s)Q>y43=1&tZ-DJ[@z46= rEO%==usM:SIe|s*]VQ$WCb&x*K*');
 define('LOGGED_IN_KEY',    '-)twvZrH~FE i#l#-3lH=CxezV/(=Ut9!?pA-3shLQT>N:_s`RrII{CQ$%OK-$9z');
