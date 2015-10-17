@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-DIR="/srv"
+DIR="/var/www/html"
+WP_DIR="/var/www/html/wp"
 
 #configuring wp cli
 cd /tmp
@@ -9,51 +10,53 @@ curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.pha
 chmod +x wp-cli.phar
 mv wp-cli.phar /usr/local/bin/wp
 wp --info --allow-root
+echo "INFO: wp-cli installed"
 
-if [ "$(ls -A $DIR)" ];
+if [ "$(ls -A $WP_DIR)" ];
 then
 	#seems that we have alredy installed wp core, just update it
-	cd "${DIR}/www/wp"
+	cd "${WP_DIR}"
 	svn up
-	cd "${DIR}/www/wp-content/themes/vip/plugins"
+	cd "${DIR}/wp-content/themes/vip/plugins"
 	svn up
-	cd "${DIR}/www/wp-content/themes/twentyfifteen"
+	cd "${DIR}/wp-content/themes/twentyfifteen"
 	svn up
-	cd "${DIR}/www/wp-tests"
+	cd "${DIR}/wp-tests"
 	svn up
 else
-
+	echo "INFO: setting the database"
 	#setting database user names and tables
 	mysql -h"$MYSQL_PORT_3306_TCP_ADDR" -P"$MYSQL_PORT_3306_TCP_PORT" -uroot -p"$MYSQL_ENV_MYSQL_ROOT_PASSWORD" < /init-tables.sql
 	rm /init-tables.sql
 
-    mkdir "${DIR}/www/"
-	mkdir "${DIR}/www/wp"
-	cd "${DIR}/www/wp"
+	echo "INFO: Creating WP DIR"
+	echo "INFO: ${WP_DIR}"
+	mkdir "${WP_DIR}"
+	cd "${WP_DIR}"
 	svn checkout --non-interactive --trust-server-cert http://core.svn.wordpress.org/trunk/ ./
 
 	#making sure some necessary folders exist
-	mkdir "${DIR}/www/wp-content"
-	mkdir "${DIR}/www/wp-content/themes"
-	mkdir "${DIR}/www/wp-content/themes/vip"
-	mkdir "${DIR}/www/wp-content/plugins"
-	mkdir "${DIR}/www/wp-content/upgrade"
-	mkdir "${DIR}/www/wp-content/uploads"
+	mkdir "${DIR}/wp-content"
+	mkdir "${DIR}/wp-content/themes"
+	mkdir "${DIR}/wp-content/themes/vip"
+	mkdir "${DIR}/wp-content/plugins"
+	mkdir "${DIR}/wp-content/upgrade"
+	mkdir "${DIR}/wp-content/uploads"
 
-	mkdir "${DIR}/www/wp-content/themes/vip/plugins"
-	cd "${DIR}/www/wp-content/themes/vip/plugins"
+	mkdir "${DIR}/wp-content/themes/vip/plugins"
+	cd "${DIR}/wp-content/themes/vip/plugins"
 	svn checkout --non-interactive --trust-server-cert https://vip-svn.wordpress.com/plugins/ ./
 
-	mkdir "${DIR}/www/wp-content/themes/twentyfifteen"
-	cd "${DIR}/www/wp-content/themes/twentyfifteen"
+	mkdir "${DIR}/wp-content/themes/twentyfifteen"
+	cd "${DIR}/wp-content/themes/twentyfifteen"
 	svn checkout --non-interactive --trust-server-cert https://wpcom-themes.svn.automattic.com/twentyfifteen/ ./
 
-	mkdir "${DIR}/www/wp-tests"
-	cd "${DIR}/www/wp-tests"
+	mkdir "${DIR}/wp-tests"
+	cd "${DIR}/wp-tests"
 	svn checkout --non-interactive --trust-server-cert http://develop.svn.wordpress.org/trunk/ ./
 
 	#setting up configuration files
-	cp -r /files/* "${DIR}/www/"
+	cp -r /files/* "${DIR}/"
 	rm -r /files
 
 
@@ -76,18 +79,19 @@ else
 		[writing-helper]='https://github.com/automattic/writing-helper.git'
 	)
 
-	#TODO Configure apache to run the code from the correct location
-
 	#installing site
-	cd "${DIR}/www/wp"
-	wp core multisite-install --url='vip.local' --title='Wordpress site' --admin_email='admin@example.com' --admin_name='wordpress' --admin_password='wordpress' --allow-root
+	echo "INFO: Installing the site using wp-cli"
+	cd $WP_DIR
+	pwd
+	wp core multisite-install --path=$WP_DIR --url='vip.local' --title='Wordpress site' --admin_email='admin@example.com' --admin_name='wordpress' --admin_password='wordpress' --allow-root
+	echo "INFO: Site installed"
 
 	#installing plugins
-	cd "${DIR}/www/wp-content/plugins"
+	cd "${DIR}/wp-content/plugins"
 	for i in "${plugins[@]}"
 	do
-   		wp plugin install ${i} --allow-root
-		wp plugin activate ${i} --network --allow-root
+   		wp plugin install ${i} --allow-root --path=$WP_DIR
+		wp plugin activate ${i} --network --allow-root --path=$WP_DIR
 	done
 
 	#installing plugins
@@ -96,16 +100,17 @@ else
 	    echo $K --- ${github_plugins[$K]};
 		mkdir $K
 		cd $K
-		git checkout ${github_plugins[$K]} ./
+		git clone ${github_plugins[$K]} ./
+		git submodule update --init --recursive
 		cd ..
-		wp plugin activate ${K} --network --allow-root
+		wp plugin activate ${K} --network --allow-root --path=$WP_DIR
 	done
 
-	cd "${DIR}/www/wp"
-	wp plugin update --all --allow-root
+	cd "${WP_DIR}"
+	wp plugin update --all --allow-root --path=$WP_DIR
 
 	# Symlink db.php for Query Monitor
-	ln -s ${DIR}/www/wp-content/db.php  ${DIR}/www/wp-content/plugins/query-monitor/wp-content/db.php
+	ln -s ${DIR}/wp-content/plugins/query-monitor/wp-content/db.php ${DIR}/wp-content/db.php
 
 fi
 exec "$@"
